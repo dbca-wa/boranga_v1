@@ -35,7 +35,7 @@
     "jquery-validation": "^1.16.0",
     "jquery.easing": "^1.4.1",
     "js-yaml": "^3.13.1",
-    "jszip": "^3.1.5",
+    "jszip": "^3.7.0",
     "localforage": "^1.7.3",
     "lodash": "^4.17.13",
     "lodash.defaultsdeep": "^4.6.1",
