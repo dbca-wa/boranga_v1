@@ -1,0 +1,9 @@
+SHELL=/bin/bash
+# Execute every minute. Polls the COLS Admin table SystemMaintenance, and checks if the application can be taken down at the time indicated in the Admin table
+* * * * * root cd /var/www/ubuntu-1604/app-grp1/boranga_prod.8086 && source venv/bin/activate && python manage_co.py system_maintenance_check >/dev/null 2>&1
+#
+# Every day (at 02:00 hrs), run the daily COLS management commands batch
+0 2 * * * www-data cd /var/www/ubuntu-1604/app-grp1/boranga_prod.8086 && source venv/bin/activate && python manage_co.py cron_tasks > logs/cron_tasks.log 2>&1
+
+# Cron job to execute oracle_integration script - used django_cron framework. MUST execute a few minutes after settings.CRON_RUN_AT_TIMES (boranga/cron.py)
+10 4 * * * www-data cd /var/www/ubuntu-1604/app-grp1/boranga_prod.8086 && source venv/bin/activate && python manage_co.py runcrons > logs/runcrons.log 2>&1

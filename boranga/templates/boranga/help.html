@@ -1,0 +1,20 @@
+{% extends 'boranga/base.html' %}
+ranga/templates/boranga/help.html
+{% load static %}
+{% load users %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_js %}
+    {{super}}
+{% endblock %}
+
+{% block requirements %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+            {{help.content|safe}}
+    </div>
+{% endblock %}

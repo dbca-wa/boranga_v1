@@ -1,0 +1,10 @@
+{%  extends 'boranga/emails/base_email.txt' %}
+
+{%  block content %}
+    
+    Your request to link your account to a company has been approved. Details are as follows:
+    Company : {{ organisation.name }}
+    ABN/ ACN : {{ organisation.abn}}
+    You have been linked to this organisation and you can now make applications on behalf of this organisation.
+
+{%  endblock %}

@@ -1,0 +1,67 @@
+ 2006  cp -pr node_modules node_modules.bak
+ 2009  rm -rf node_modules
+
+How to upgrade individual packages:
+ 2016  npm install yourPackage@latest --save    Eg.
+ 2016  npm install yourPackage@3.4.0 --save
+
+---------------------------------------------------------------------------------------------------------------------------
+11-Feb-2020
+ 1999  npm install growl@1.10.0 --save
+ 2000  npm install lodash.defaultsdeep@4.6.1 --save
+ 2001  npm install lodash.mergewith@4.6.2 --save
+ 2002  npm install http-proxy-agent@2.1.0 --save
+ 2003  npm install js-yaml@3.13.1 --save
+ 2004  npm install mixin-deep@1.3.2 --save
+ 2005  npm install set-value@2.0.1 --save
+ 2006  npm install https-proxy-agent@2.2.0 --save
+ 2007  npm install diff@3.5.0 --save
+ 2008  npm install handlebars@4.3.0 --save
+ 2009  npm install ws@1.1.5 --save
+ 2010  npm install eslint@4.18.2 --save
+ 2011  npm install braces@2.3.1 --save
+ 2012  npm install webpack-bundle-analyzer@3.3.2 --save
+ 2013  npm install jquery@3.4.0 --save
+ 2014  npm install serialize-javascript@2.1.1 --save
+ 2015  npm install bootstrap@3.4.0 --save (Max version is 3.4.0, else comms log link fails to open Comms Dialog window)
+ 2016  npm install
+ 2017  npm run build
+
+---------------------------------------------------------------------------------------------------------------------------
+26-Feb-2021
+Hi,
+
+Jason has asked me to give you the series of steps I followed to resolve frontend security issues in Fee Waiver.  This approach could be followed for other licencing systems like DAS, COLS and WLC.  Of course, security issues might vary across repositories, so you should pay attention to your own github security reports.
+
+1)  Turn on Github security reports in your fork, so you have greater visibility of vulnerabilities:
+https://docs.github.com/en/github/administering-a-repository/managing-security-and-analysis-settings-for-your-repository
+
+2)  Delete package-lock.json file/s, add it to .gitignore and remove from the git index (with git rm --cached package-lock.json).
+
+3)  Rebuild node_modules:
+rm -rf node_modules/
+npm cache clean --force
+npm install
+npm run build
+You should now have jquery 3.5.1 and bootstrap 3.4.1.  Use "npm ls jquery" to check.
+4)  In package.json, update these entries:
+"webpack": "^3.12.0"
+"extract-text-webpack-plugin": "^3.0.2"
+npm install
+npm run build
+5)  Update babel-loader and associated packages:
+npm install babel-loader babel-core babel-preset-env webpack --save-dev
+npm run build
+6)  The popovers in comms_log.vue will be broken.  There is a simple fix (sanitize:false).  You can see how I have applied this in Fee Waiver here:
+https://github.com/mintcoding/feewaiver/pull/15/files
+
+7)  Finally, do a "manage.py collectstatic --no-input" and ensure you are running a static frontend (no "npm start").  Then, do system testing.
+
+N.B.  I have "npm run build" in steps 3-5, as you need to check whether npm can build after every package version change.
+
+P.S.  I followed these steps for DAS and encountered an additional error, which Katsufumi has resolved in WLC.  When using the "render" option in a datatable, the "data" option must also be set. See 
+https://github.com/Djandwich/wildlifecompliance/commit/445bd238911081bd92c112dc3046df4afa04a696#diff-f49991d8be48cf59e6e777bdd11ac68d3b7e735aabea2425dfeccd68104812a9
+
+Regards,
+
+Brendan Blackford
