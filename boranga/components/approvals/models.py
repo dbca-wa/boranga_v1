@@ -19,7 +19,7 @@ from ledger.accounts.models import EmailUser, RevisionedMixin
 from ledger.licence.models import  Licence
 from boranga import exceptions
 from boranga.components.organisations.models import Organisation
-from boranga.components.proposals.models import Proposal, ProposalUserAction, DistrictProposal, RequirementDocument
+from boranga.components.proposals.models import Proposal, ProposalUserAction, RequirementDocument
 from boranga.components.main.models import CommunicationsLogEntry, UserAction, Document, ApplicationType
 from boranga.components.approvals.email import (
     send_approval_expire_email_notification,
@@ -325,7 +325,7 @@ class Approval(RevisionedMixin):
         if self.current_proposal.is_lawful_authority and self.current_proposal.is_lawful_authority_finalised:
             return self.can_reissue
         return False
-        
+
     @property
     def approved_by(self):
         return self.current_proposal.approved_by
@@ -341,7 +341,7 @@ class Approval(RevisionedMixin):
             req_doc=RequirementDocument.objects.filter(requirement__in=requirement_ids, visible=True)
             return req_doc
         return None
-    
+
 
 #    @property
 #    def approved_by(self):
@@ -352,7 +352,7 @@ class Approval(RevisionedMixin):
 #            return proposal.action_logs.filter(what__contains='Issue Licence').last().who
 #        except:
 #            return None
-    
+
     def generate_doc(self, user, preview=False):
         from boranga.components.approvals.pdf import create_approval_doc, create_approval_pdf_bytes
         copied_to_permit = self.copiedToPermit_fields(self.current_proposal) #Get data related to isCopiedToPermit tag
@@ -624,61 +624,8 @@ def delete_documents(sender, instance, *args, **kwargs):
         except:
             pass
 
-#Filming Models
-class DistrictApproval(RevisionedMixin):
-    STATUS_CHOICES = (
-        ('current','Current'),
-        ('expired','Expired'),
-        ('cancelled','Cancelled'),
-        ('surrendered','Surrendered'),
-        ('suspended','Suspended'),
-        ('extended','extended'),
-    )
-    lodgement_number = models.CharField(max_length=9, blank=True, default='')
-    status = models.CharField(max_length=40, choices=STATUS_CHOICES,
-                                       default=STATUS_CHOICES[0][0])
-    licence_document = models.ForeignKey(ApprovalDocument, blank=True, null=True, related_name='district_licence_document')
-    #cover_letter_document = models.ForeignKey(ApprovalDocument, blank=True, null=True, related_name='cover_letter_document')
-    replaced_by = models.ForeignKey('self', blank=True, null=True)
-    current_district_proposal = models.ForeignKey(DistrictProposal,related_name='district_approvals', null=True)
-    renewal_document = models.ForeignKey(ApprovalDocument, blank=True, null=True, related_name='district_renewal_document')
-    renewal_sent = models.BooleanField(default=False)
-    issue_date = models.DateTimeField()
-    original_issue_date = models.DateField(auto_now_add=True)
-    start_date = models.DateField()
-    expiry_date = models.DateField()
-    surrender_details = JSONField(blank=True,null=True)
-    suspension_details = JSONField(blank=True,null=True)
-    #submitter = models.ForeignKey(EmailUser, on_delete=models.PROTECT, blank=True, null=True, related_name='boranga_approvals')
-    #org_applicant = models.ForeignKey(Organisation,on_delete=models.PROTECT, blank=True, null=True, related_name='org_approvals')
-    #proxy_applicant = models.ForeignKey(EmailUser,on_delete=models.PROTECT, blank=True, null=True, related_name='proxy_approvals')
-    extracted_fields = JSONField(blank=True, null=True)
-    cancellation_details = models.TextField(blank=True)
-    extend_details = models.TextField(blank=True)
-    cancellation_date = models.DateField(blank=True, null=True)
-    set_to_cancel = models.BooleanField(default=False)
-    set_to_suspend = models.BooleanField(default=False)
-    set_to_surrender = models.BooleanField(default=False)
-    renewal_count = models.PositiveSmallIntegerField('Number of times an Approval has been renewed', default=0)
-    migrated=models.BooleanField(default=False)
-
-    class Meta:
-        app_label = 'boranga'
-        unique_together= ('lodgement_number', 'issue_date')
-
-#import reversion
-#reversion.register(Approval, follow=['documents', 'approval_set', 'action_logs'])
-#reversion.register(ApprovalDocument)
-#reversion.register(ApprovalLogDocument, follow=['documents'])
-#reversion.register(ApprovalLogEntry)
-#reversion.register(ApprovalUserAction)
 
 import reversion
-reversion.register(Approval, follow=['compliances', 'documents', 'comms_logs', 'action_logs'])
-reversion.register(ApprovalDocument, follow=['licence_document', 'cover_letter_document', 'renewal_document'])
-reversion.register(ApprovalLogEntry, follow=['documents'])
-reversion.register(ApprovalLogDocument)
-reversion.register(ApprovalUserAction)
-reversion.register(DistrictApproval)
+#reversion.register(Approval, follow=['compliances', 'documents', 'comms_logs', 'action_logs'])
 
 

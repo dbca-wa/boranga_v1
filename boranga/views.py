@@ -15,13 +15,10 @@ from datetime import datetime, timedelta
 
 from boranga.helpers import is_internal
 from boranga.forms import *
-from boranga.components.proposals.models import Referral, Proposal, HelpPage, DistrictProposal
+from boranga.components.proposals.models import Referral, Proposal, HelpPage
 from boranga.components.compliances.models import Compliance
 from boranga.components.proposals.mixins import ReferralOwnerMixin
-from boranga.components.main.models import Park
-from boranga.components.bookings.email import send_invoice_tclass_email_notification, send_confirmation_tclass_email_notification
 
-from ledger.checkout.utils import create_basket_session, create_checkout_session, place_order_submission, get_cookie_basket
 from django.core.management import call_command
 import json
 from decimal import Decimal
@@ -67,11 +64,7 @@ class InternalComplianceView(DetailView):
     model = Compliance
     template_name = 'boranga/dash/index.html'
 
-class DistrictProposalView(DetailView):
-    model = DistrictProposal
-    template_name = 'boranga/dash/index.html'
-
-class CommercialOperatorRoutingView(TemplateView):
+class BorangaRoutingView(TemplateView):
     template_name = 'boranga/index.html'
 
     def get(self, *args, **kwargs):
@@ -80,12 +73,12 @@ class CommercialOperatorRoutingView(TemplateView):
                 return redirect('internal')
             return redirect('external')
         kwargs['form'] = LoginForm
-        return super(CommercialOperatorRoutingView, self).get(*args, **kwargs)
+        return super(BorangaRoutingView, self).get(*args, **kwargs)
 
-class CommercialOperatorContactView(TemplateView):
+class BorangaContactView(TemplateView):
     template_name = 'boranga/contact.html'
 
-class CommercialOperatorFurtherInformationView(TemplateView):
+class BorangaFurtherInformationView(TemplateView):
     template_name = 'boranga/further_info.html'
 
 class InternalProposalView(DetailView):
@@ -100,7 +93,7 @@ class InternalProposalView(DetailView):
                 return super(InternalProposalView, self).get(*args, **kwargs)
             return redirect('external-proposal-detail')
         kwargs['form'] = LoginForm
-        return super(CommercialOperatorRoutingDetailView, self).get(*args, **kwargs)
+        return super(BorangaRoutingDView, self).get(*args, **kwargs)
 
 
 @login_required(login_url='ds_home')

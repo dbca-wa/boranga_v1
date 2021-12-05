@@ -20,8 +20,7 @@ from ledger.licence.models import  Licence
 from boranga import exceptions
 from boranga.components.organisations.models import Organisation
 from boranga.components.main.models import CommunicationsLogEntry, Region, UserAction, Document
-from boranga.components.proposals.models import ProposalRequirement, AmendmentReason, DistrictProposal
-from boranga.components.approvals.models import DistrictApproval
+from boranga.components.proposals.models import ProposalRequirement, AmendmentReason
 from boranga.components.compliances.email import (
                         send_compliance_accept_email_notification,
                         send_amendment_email_notification,
@@ -74,8 +73,6 @@ class Compliance(RevisionedMixin):
     reminder_sent = models.BooleanField(default=False)
     post_reminder_sent = models.BooleanField(default=False)
     fee_invoice_reference = models.CharField(max_length=50, null=True, blank=True, default='')
-    district_proposal = models.ForeignKey(DistrictProposal,related_name='district_compliance', null=True, blank=True)
-    district_approval = models.ForeignKey(DistrictApproval,related_name='district_compliance', null=True, blank=True)
 
 
     class Meta:

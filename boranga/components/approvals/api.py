@@ -43,7 +43,6 @@ from boranga.components.approvals.serializers import (
     ApprovalSurrenderSerializer,
     ApprovalUserActionSerializer,
     ApprovalLogEntrySerializer,
-    ApprovalPaymentSerializer
 )
 from boranga.components.organisations.models import Organisation, OrganisationContact
 from boranga.helpers import is_customer, is_internal
@@ -73,17 +72,17 @@ class ApprovalFilterBackend(DatatablesFilterBackend):
             elif queryset.model is Referral or queryset.model is Compliance:
                 queryset = queryset.filter(proposal__region__name__iregex=regions.replace(',', '|'))
 
-        
+
         date_from = request.GET.get('date_from')
         date_to = request.GET.get('date_to')
-        
+
         if queryset.model is Approval:
             if date_from:
                 queryset = queryset.filter(start_date__gte=date_from)
 
             if date_to:
                 queryset = queryset.filter(expiry_date__lte=date_to)
-        
+
         getter = request.query_params.get
         fields = self.get_fields(getter)
         ordering = self.get_ordering(getter, fields)
@@ -148,42 +147,6 @@ class ApprovalPaginatedViewSet(viewsets.ModelViewSet):
         result_page = self.paginator.paginate_queryset(qs, request)
         serializer = ApprovalSerializer(result_page, context={'request':request}, many=True)
         return self.paginator.get_paginated_response(serializer.data)
-
-
-from rest_framework import filters
-class ApprovalPaymentFilterViewSet(generics.ListAPIView):
-    """ https://cop-internal.dbca.wa.gov.au/api/filtered_organisations?search=Org1
-    """
-    queryset = Approval.objects.none()
-    serializer_class = ApprovalPaymentSerializer
-    filter_backends = (filters.SearchFilter,)
-    #search_fields = ('applicant', 'applicant_id',)
-    search_fields = ('id',)
-
-    def get_queryset(self):
-        """
-        Return All approvals associated with user (proxy_applicant and org_applicant)
-        """
-        #return Approval.objects.filter(proxy_applicant=self.request.user)
-        user = self.request.user
-
-        # get all orgs associated with user
-        user_org_ids = OrganisationContact.objects.filter(email=user.email).values_list('organisation_id', flat=True)
-
-        now = datetime.now().date()
-        approval_qs =  Approval.objects.filter(Q(proxy_applicant=user) | Q(org_applicant_id__in=user_org_ids) | Q(submitter_id=user))
-        approval_qs =  approval_qs.exclude(current_proposal__application_type__name='E Class')
-        approval_qs =  approval_qs.exclude(expiry_date__lt=now)
-        approval_qs =  approval_qs.exclude(replaced_by__isnull=False) # get lastest licence, ignore the amended
-        return approval_qs
-
-    @list_route(methods=['GET',])
-    def _list(self, request, *args, **kwargs):
-        data =  []
-        for approval in self.get_queryset():
-            data.append(dict(lodgement_number=approval.lodgement_number, current_proposal=approval.current_proposal_id))
-        return Response(data)
-        #return Response(self.get_queryset().values_list('lodgement_number','current_proposal_id'))
 
 
 class ApprovalViewSet(viewsets.ModelViewSet):

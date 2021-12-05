@@ -8,7 +8,6 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
 from boranga.components.emails.emails import TemplateEmailBase
-from boranga.components.bookings.awaiting_payment_invoice_pdf import create_awaiting_payment_invoice_pdf_bytes
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -490,7 +489,7 @@ def send_proposal_awaiting_payment_approval_email_notification(proposal, request
 
     msg = email.send(proposal.submitter.email, bcc=all_ccs, attachments=[attachment], context=context)
     sender = request.user if request else settings.DEFAULT_FROM_EMAIL
-    
+
     filename_appended = '{}_{}.{}'.format('confirmation', datetime.now().strftime('%d%b%Y'), 'pdf')
     log_proposal = _log_proposal_email(msg, proposal, sender=sender, file_bytes=doc, filename=filename_appended)
 
@@ -526,7 +525,7 @@ def send_district_proposal_submit_email_notification(district_proposal, request)
     return msg
 
 def send_district_proposal_approver_sendback_email_notification(request, district_proposal):
-    proposal=district_proposal.proposal    
+    proposal=district_proposal.proposal
     email = DistrictApproverSendBackNotificationEmail()
     url = request.build_absolute_uri(reverse('internal-district-proposal-detail',kwargs={'proposal_pk': proposal.id, 'district_proposal_pk': district_proposal.id}))
 
@@ -538,7 +537,7 @@ def send_district_proposal_approver_sendback_email_notification(request, distric
 
     context = {
         'proposal': proposal,
-        'district_proposal': district_proposal,        
+        'district_proposal': district_proposal,
         'url': url,
         'approver_comment': approver_comment
     }
@@ -553,14 +552,14 @@ def send_district_proposal_approver_sendback_email_notification(request, distric
 
 #send email when Proposal is 'proposed to decline' by assessor.
 def send_district_approver_decline_email_notification(reason, request, district_proposal):
-    proposal=district_proposal.proposal        
+    proposal=district_proposal.proposal
     email = DistrictApproverDeclineSendNotificationEmail()
     url = request.build_absolute_uri(reverse('internal-district-proposal-detail',kwargs={'proposal_pk': proposal.id, 'district_proposal_pk': district_proposal.id}))
     context = {
         'proposal': proposal,
         'reason': reason,
         'url': url,
-        'district_proposal': district_proposal,        
+        'district_proposal': district_proposal,
 
     }
 
@@ -574,7 +573,7 @@ def send_district_approver_decline_email_notification(reason, request, district_
 
 
 def send_district_approver_approve_email_notification(request, district_proposal):
-    proposal=district_proposal.proposal    
+    proposal=district_proposal.proposal
     email = DistrictApproverApproveSendNotificationEmail()
     url = request.build_absolute_uri(reverse('internal-district-proposal-detail',kwargs={'proposal_pk': proposal.id, 'district_proposal_pk': district_proposal.id}))
     context = {
@@ -582,7 +581,7 @@ def send_district_approver_approve_email_notification(request, district_proposal
         'expiry_date' : district_proposal.proposed_issuance_approval.get('expiry_date'),
         'details': district_proposal.proposed_issuance_approval.get('details'),
         'proposal': proposal,
-        'district_proposal': district_proposal,        
+        'district_proposal': district_proposal,
         'url': url
     }
     msg = email.send(district_proposal.approver_recipients, context=context)
@@ -657,7 +656,7 @@ def send_district_proposal_approval_email_notification(district_proposal,approva
         'num_requirement_docs': len(attachments),
         'approval': approval,
     }
-    
+
     msg = email.send(proposal.submitter.email, bcc= all_ccs, context=context, attachments=attachments)
     sender = request.user if request else settings.DEFAULT_FROM_EMAIL
     _log_proposal_email(msg, proposal, sender=sender)
@@ -697,7 +696,7 @@ def send_district_proposal_approval_email_notification_orig(district_proposal,ap
                 attachment = (file_name, doc._file.file.read())
                 attachments.append(attachment)
 
-    #url=''            
+    #url=''
 
     context = {
         'proposal': proposal,

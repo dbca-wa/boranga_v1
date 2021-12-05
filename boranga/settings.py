@@ -17,6 +17,9 @@ SHOW_TESTS_URL = env('SHOW_TESTS_URL', False)
 SHOW_DEBUG_TOOLBAR = env('SHOW_DEBUG_TOOLBAR', False)
 BUILD_TAG = env('BUILD_TAG', hashlib.md5(os.urandom(32)).hexdigest())  # URL of the Dev app.js served by webpack & express
 
+if env('CONSOLE_EMAIL_BACKEND', False):
+   EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 if SHOW_DEBUG_TOOLBAR:
 #    def get_ip():
 #        import subprocess
@@ -59,7 +62,6 @@ INSTALLED_APPS += [
     'boranga.components.proposals',
     'boranga.components.approvals',
     'boranga.components.compliances',
-    'boranga.components.bookings',
     'taggit',
     'rest_framework',
     'rest_framework_datatables',
@@ -101,7 +103,6 @@ REST_FRAMEWORK = {
 
 
 MIDDLEWARE_CLASSES += [
-    'boranga.middleware.BookingTimerMiddleware',
     'boranga.middleware.FirstTimeNagScreenMiddleware',
     'boranga.middleware.RevisionOverrideMiddleware',
 ]
@@ -127,7 +128,7 @@ CACHES = {
         'LOCATION': os.path.join(BASE_DIR, 'boranga', 'cache'),
     }
 }
-STATIC_ROOT=os.path.join(BASE_DIR, 'staticfiles_co')
+STATIC_ROOT=os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS.append(os.path.join(os.path.join(BASE_DIR, 'boranga', 'static')))
 STATICFILES_DIRS.append(os.path.join(os.path.join(BASE_DIR, 'boranga', 'static', 'boranga_vue', 'static')))
 DEV_STATIC = env('DEV_STATIC',False)
@@ -137,12 +138,11 @@ if DEV_STATIC and not DEV_STATIC_URL:
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 # Department details
-SYSTEM_NAME = env('SYSTEM_NAME', 'Commercial Operator Licensing')
-SYSTEM_NAME_SHORT = env('SYSTEM_NAME_SHORT', 'COLS')
+SYSTEM_NAME = env('SYSTEM_NAME', 'Boranga')
+SYSTEM_NAME_SHORT = env('SYSTEM_NAME_SHORT', 'BGA')
 SITE_PREFIX = env('SITE_PREFIX')
 SITE_DOMAIN = env('SITE_DOMAIN')
 SUPPORT_EMAIL = env('SUPPORT_EMAIL', 'licensing@' + SITE_DOMAIN).lower()
-SUPPORT_EMAIL_FILMING = env('SUPPORT_EMAIL_FILMING', 'filming@' + SITE_DOMAIN).lower()
 DEP_URL = env('DEP_URL','www.' + SITE_DOMAIN)
 DEP_PHONE = env('DEP_PHONE','(08) 9219 9978')
 DEP_PHONE_FILMING = env('DEP_PHONE_FILMING','(08) 9219 8411')
@@ -156,21 +156,15 @@ DEP_ADDRESS = env('DEP_ADDRESS','17 Dick Perry Avenue, Kensington WA 6151')
 SITE_URL = env('SITE_URL', 'https://' + SITE_PREFIX + '.' + SITE_DOMAIN)
 PUBLIC_URL=env('PUBLIC_URL', SITE_URL)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', 'no-reply@' + SITE_DOMAIN).lower()
-MEDIA_APP_DIR = env('MEDIA_APP_DIR', 'cols')
-ADMIN_GROUP = env('ADMIN_GROUP', 'COLS Admin')
-COLS_EVENT_USERGUIDE_URL = env('COLS_EVENT_USERGUIDE_URL', 'https://parks.dpaw.wa.gov.au/for-business/how-apply-0')
+MEDIA_APP_DIR = env('MEDIA_APP_DIR', 'boranga')
+ADMIN_GROUP = env('ADMIN_GROUP', 'Boranga Admin')
 COLS_HANDBOOK_URL = env('COLS_HANDBOOK_URL', 'https://parks.dpaw.wa.gov.au/know/commercial-operator-handbook')
-COLS_FILMING_HANDBOOK_URL = env('COLS_FILMING_HANDBOOK_URL', 'https://parks.dpaw.wa.gov.au/know/commercial-filming-and-photography-handbook')
 CRON_RUN_AT_TIMES = env('CRON_RUN_AT_TIMES', '04:05')
 CRON_EMAIL = env('CRON_EMAIL', 'cron@' + SITE_DOMAIN).lower()
 # for ORACLE Job Notification - override settings_base.py
 EMAIL_FROM = DEFAULT_FROM_EMAIL
-OTHER_PAYMENT_ALLOWED = env('OTHER_PAYMENT_ALLOWED', False) # Cash/Cheque
+PAYMENT_SYSTEM_ID='N/A'
 
-OSCAR_BASKET_COOKIE_OPEN = 'cols_basket'
-PAYMENT_SYSTEM_ID = env('PAYMENT_SYSTEM_ID', 'S557')
-PAYMENT_SYSTEM_PREFIX = env('PAYMENT_SYSTEM_PREFIX', PAYMENT_SYSTEM_ID.replace('S','0')) # '0557'
-os.environ['LEDGER_PRODUCT_CUSTOM_FIELDS'] = "('ledger_description','quantity','price_incl_tax','price_excl_tax','oracle_code')"
 CRON_NOTIFICATION_EMAIL = env('CRON_NOTIFICATION_EMAIL', NOTIFICATION_EMAIL).lower()
 
 if not VALID_SYSTEMS:
@@ -196,18 +190,6 @@ CKEDITOR_CONFIGS = {
 }
 
 # Additional logging for boranga
-LOGGING['handlers']['payment_checkout'] = {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'cols_payment_checkout.log'),
-            'formatter': 'verbose',
-            'maxBytes': 5242880
-        }
-LOGGING['loggers']['payment_checkout'] = {
-            'handlers': ['payment_checkout'],
-            'level': 'INFO'
-        }
-
 LOGGING['loggers']['boranga'] = {
             'handlers': ['file'],
             'level': 'INFO'

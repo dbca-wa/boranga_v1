@@ -7,7 +7,6 @@ import datetime
 
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from boranga.components.bookings.models import ApplicationFee
 from reversion.middleware  import RevisionMiddleware
 from reversion.views import _request_creates_revision
 
@@ -25,23 +24,6 @@ class FirstTimeNagScreenMiddleware(object):
                 if request.path not in (path_ft, path_logout):
                     return redirect(reverse('first_time')+"?next="+urlquote_plus(request.get_full_path()))
 
-
-class BookingTimerMiddleware(object):
-    def process_request(self, request):
-        #print ("BookingTimerMiddleware: REQUEST SESSION")
-        #print request.session['ps_booking']
-        if 'cols_app_invoice' in request.session:
-            #print ("BOOKING SESSION : "+str(request.session['ps_booking']))
-            try:
-                application_fee = ApplicationFee.objects.get(pk=request.session['cols_app_invoice'])
-            except:
-                # no idea what object is in self.request.session['ps_booking'], ditch it
-                del request.session['cols_app_invoice']
-                return
-            if application_fee.payment_type != ApplicationFee.PAYMENT_TYPE_TEMPORARY:
-                # booking in the session is not a temporary type, ditch it
-                del request.session['cols_app_invoice']
-        return
 
 class RevisionOverrideMiddleware(RevisionMiddleware):
 
