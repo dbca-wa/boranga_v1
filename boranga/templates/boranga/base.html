@@ -11,7 +11,6 @@
 {% system_name_short as short_name %}
 {% dept_name as department_name %}
 {% system_name as system_name %}
-{% system_name_short as system_name_short %}
 {% support_email as support_email %}
 {% is_payment_officer as is_payment_officer %}
 {% build_tag as build_tag %}
@@ -32,7 +31,7 @@
             {% endblock %}
             <title>
                 {% block title %}
-                {{ short_name }} - {{ department_name }}
+                {{ system_name }} - {{ department_name }}
                 {% endblock %}
             </title>
 
@@ -64,58 +63,16 @@
                                     {% block left_menu_items %}
                                         {% if is_internal_login %}
 
-                                        <li class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                                Menu 1
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="{% url 'admin:index' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Composite</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                                Menu 2
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="{% url 'admin:index' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Composite</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                                Menu 3
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="{% url 'admin:index' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Composite</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                                Menu 4
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="{% url 'admin:index' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Composite</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                                Menu 5
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="{% url 'admin:index' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Fauna</a></li>
-                                                <li><a href="{% url 'manage-account' %}">Composite</a></li>
-                                            </ul>
-                                        </li>
+                                        <li><a href="/internal/species-communities">Species and Communities</a></li>
+                                        <li><a href="/internal/species-communities">Conservation Status</a></li>
+                                        <li><a href="/internal/species-communities">Conservation Plans</a></li>
+                                        <li><a href="/internal/species-communities">Occurrences</a></li>
+                                        <li><a href="/internal/species-communities">Translocations</a></li>
 
+                                        <li><a href="/internal/organisations/access">User Access</a></li>
+                                        <li><a href="/internal/search">Search</a></li>
                                         <!--
+                                        <li><a href="/internal/approvals">Licences</a></li>
                                         <li><a href="/internal/compliances">Compliance with Requirements</a></li>
                                         <li><a href="/internal/organisations/access">Organisation Access</a></li>
                                         <li><a href="/internal/search">Search</a></li>

@@ -18,6 +18,7 @@ import PaymentOrder from '@/components/common/tclass/payment_order.vue'
 import Reports from '@/components/reports/reports.vue'
 import ParkEntryFeesDashboard from '../park_entry_fees_dashboard.vue'
 import DistrictProposal from '../district_proposals/district_proposal.vue'
+import SpeciesCommunitiesDash from '../species_communities/dashboard.vue'
 export default
 {
     path: '/internal',
@@ -31,12 +32,18 @@ export default
     children: [
         {
             path: '/',
-            component: InternalDashboard
+            //component: InternalDashboard
+            component: SpeciesCommunitiesDash,
         },
         {
             path: 'approvals',
             component: ApprovalDash,
             name:"internal-approvals-dash"
+        },
+        {
+            path: 'species-communities',
+            component: SpeciesCommunitiesDash,
+            name:"internal-species-communities-dash"
         },
         {
             path: 'approval/:approval_id',
