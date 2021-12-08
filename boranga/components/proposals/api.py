@@ -361,6 +361,13 @@ class ProposalPaginatedViewSet(viewsets.ModelViewSet):
         return self.paginator.get_paginated_response(serializer.data)
 
 
+    @list_route(methods=['GET',])
+    def species_communities_internal(self, request, *args, **kwargs):
+
+        d = {"recordsTotal":1169,"recordsFiltered":1,"data":[{"id":1634,"application_type":"Commercial operations","proposal_type":"Renewal","activity":None,"title":None,"region":None,"customer_status":"Under Review","processing_status":"With Assessor","applicant":"Kimberley Off-Road Adventure Tours Pty Ltd","submitter":{"id":102473,"email":"info@kimberleyoffroadtours.com","first_name":"Adam","last_name":"Bowen","title":None,"organisation":None},"assigned_officer":None,"lodgement_date":"2021-12-06T00:30:46.613243Z","can_user_edit":False,"can_user_view":True,"reference":"A001634-0","lodgement_number":"A001634","can_officer_process":True,"assessor_process":True,"allowed_assessors":[{"id":102712,"email":"stella.horne@dbca.wa.gov.au","first_name":"Stella","last_name":"Horne","title":"Licensing Officer","organisation":None},{"id":283,"email":"matthew.king@dbca.wa.gov.au","first_name":"Matthew","last_name":"King","title":"Commercial Business Coordinator","organisation":None},{"id":746,"email":"ashlee.russell@dbca.wa.gov.au","first_name":"Ashlee","last_name":"Russell","title":"Licensing Officer","organisation":None},{"id":255,"email":"jawaid.mushtaq@dbca.wa.gov.au","first_name":"Jawaid","last_name":"Mushtaq","title":"Coordinator, Applications Development and Integration","organisation":None},{"id":102713,"email":"aaron.farr@dbca.wa.gov.au","first_name":"Aaron","last_name":"Farr","title":"Licensing Officer","organisation":None}],"fee_invoice_url":"/cols/payments/invoice-pdf/05575281113","fee_invoice_reference":"05575281113","fee_paid":True, "migrated":False ,"status":"With Assessor"}],"draw":5}
+
+        return Response(d)
+
 class VersionableModelViewSetMixin(viewsets.ModelViewSet):
     @detail_route(methods=['GET',])
     def history(self, request, *args, **kwargs):
@@ -1066,51 +1073,19 @@ class ProposalViewSet(viewsets.ModelViewSet):
 
     @detail_route(methods=['GET',])
     def internal_proposal(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = InternalProposalSerializer(instance,context={'request':request})
-        if instance.application_type.name==ApplicationType.TCLASS:
-            serializer = InternalProposalSerializer(instance,context={'request':request})
-        elif instance.application_type.name==ApplicationType.FILMING:
-            serializer = InternalFilmingProposalSerializer(instance,context={'request':request})
-        elif instance.application_type.name==ApplicationType.EVENT:
-            serializer = InternalEventProposalSerializer(instance,context={'request':request})
-        return Response(serializer.data)
-
-#    @detail_route(methods=['GET',])
-#    def proposal_parks(self, request, *args, **kwargs):
 #        instance = self.get_object()
-#        serializer = ProposalParkSerializer(instance,context={'request':request})
+#        serializer = InternalProposalSerializer(instance,context={'request':request})
+#        if instance.application_type.name==ApplicationType.TCLASS:
+#            serializer = InternalProposalSerializer(instance,context={'request':request})
+#        elif instance.application_type.name==ApplicationType.FILMING:
+#            serializer = InternalFilmingProposalSerializer(instance,context={'request':request})
+#        elif instance.application_type.name==ApplicationType.EVENT:
+#            serializer = InternalEventProposalSerializer(instance,context={'request':request})
 #        return Response(serializer.data)
 
+        d = {"id":1634,"application_type":"Commercial operations","activity":None,"approval_level":None,"approval_level_document":None,"region":None,"district":None,"tenure":None,"title":None,"data":None,"schema":[{}],"customer_status":"Under Review","processing_status":"With Assessor","review_status":"Not Reviewed","applicant":"Kimberley Off-Road Adventure Tours Pty Ltd","org_applicant":{"id":182,"name":"Kimberley Off-Road Adventure Tours Pty Ltd","trading_name":"Kimberley Off-Road Adventure Tours","abn":"86612722648","address":{"id":1425,"line1":"100 Tobin Road","locality":"Howard Springs","state":"Australia","country":"AU","postcode":"0835"},"email":"info@kimberleyoffroadtours.com","organisation":{"id":194,"name":"Kimberley Off-Road Adventure Tours Pty Ltd","abn":"86612722648","identification":None,"email":"info@kimberleyoffroadtours.com","trading_name":"Kimberley Off-Road Adventure Tours","postal_address":1425,"billing_address":193},"pins":{"one":"460059040700","two":"536798436023","three":"202180013346","four":"490923434958"},"delegates":[{"id":102473,"name":"Adam Bowen","email":"info@kimberleyoffroadtours.com","is_admin":True}],"apply_application_discount":False,"application_discount":0.0,"apply_licence_discount":False,"licence_discount":0.0,"charge_once_per_year":None,"max_num_months_ahead":0,"last_event_application_fee_date":None},"proxy_applicant":None,"submitter":{"id":102473,"email":"info@kimberleyoffroadtours.com","first_name":"Adam","last_name":"Bowen","dob":None,"title":None,"organisation":None,"residential_address":None,"phone_number":"0447740880","mobile_number":""},"applicant_type":"ORG","assigned_officer":None,"assigned_approver":None,"previous_application":734,"get_history":[{"id":734,"modified":"2021-09-30T18:01:56.753000Z"},{"id":250,"modified":"2019-12-10T07:32:53.388097Z"}],"lodgement_date":"2021-12-06T00:30:46.613243Z","modified_date":"2021-12-06T00:30:50.068316Z","documents":[5005,5006,5007],"requirements":[2829,2828],"readonly":True,"can_user_edit":False,"can_user_view":True,"documents_url":"/media/cols/proposals/1634/documents/","assessor_mode":{"assessor_mode":True,"has_assessor_mode":True,"assessor_can_assess":True,"assessor_level":"assessor","assessor_box_view":True},"current_assessor":{"id":255,"name":"Jawaid Mushtaq","email":"jawaid.mushtaq@dbca.wa.gov.au"},"assessor_data":None,"comment_data":None,"latest_referrals":[],"allowed_assessors":[{"id":102712,"email":"stella.horne@dbca.wa.gov.au","first_name":"Stella","last_name":"Horne","title":"Licensing Officer","organisation":None},{"id":283,"email":"matthew.king@dbca.wa.gov.au","first_name":"Matthew","last_name":"King","title":"Commercial Business Coordinator","organisation":None},{"id":746,"email":"ashlee.russell@dbca.wa.gov.au","first_name":"Ashlee","last_name":"Russell","title":"Licensing Officer","organisation":None},{"id":255,"email":"jawaid.mushtaq@dbca.wa.gov.au","first_name":"Jawaid","last_name":"Mushtaq","title":"Coordinator, Applications Development and Integration","organisation":None},{"id":102713,"email":"aaron.farr@dbca.wa.gov.au","first_name":"Aaron","last_name":"Farr","title":"Licensing Officer","organisation":None}],"proposed_issuance_approval":None,"proposed_decline_status":False,"proposaldeclineddetails":None,"permit":None,"reference":"A001634-0","lodgement_number":"A001634","lodgement_sequence":0,"can_officer_process":True,"proposal_type":"Renewal","qaofficer_referrals":[],"applicant_details":"Kimberley Off-Road Adventure Tours Pty Ltd \n100 Tobin Road, Howard Springs, Australia, AU, 0835","other_details":{"id":2918,"accreditations":[{"id":1109,"accreditation_type":"atap","accreditation_expiry":None,"comments":"","proposal_other_details":2918,"accreditation_type_value":"QTA"}],"preferred_licence_period":"3_year","nominated_start_date":"01/02/2022","insurance_expiry":"01/03/2022","other_comments":"www.kimberleyoffroadtours.com\nRegarding the Wunambal Gaambera Aboriginal Corporation (WGAC) tour visitor pass, this would not be needed for the standard tours we run but potentially if we organised a charter for a group.  In which case we would apply for one.","credit_fees":False,"credit_docket_books":True,"docket_books_number":"5","mooring":[""],"proposed_end_date":"31/01/2025"},"activities_land":None,"land_access":[3],"trail_activities":[],"trail_section_activities":[],"activities_marine":None,"training_completed":True,"can_edit_activities":True,"can_edit_period":True,"reversion_ids":[{"cur_version_id":12134131,"prev_version_id":12133999,"created":"2021-12-06T00:30:50.068316Z"},{"cur_version_id":12134131,"prev_version_id":12068457,"created":"2021-12-06T00:30:48.412148Z"},{"cur_version_id":12134131,"prev_version_id":12068378,"created":"2021-12-02T01:54:40.309170Z"}],"assessor_assessment":{"id":1326,"completed":False,"submitter":None,"referral_assessment":False,"referral_group":None,"referral_group_name":"","checklist":[{"id":12488,"question":{"id":37,"text":"Valid public liability insurance certificate","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12489,"question":{"id":18,"text":"Adequate level of accreditation provided","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12490,"question":{"id":8,"text":"Deed Poll signed, witnessed and dated","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12491,"question":{"id":36,"text":"Is a higher assessment required for any activities or parks? If yes please list.","answer_type":"free_text"},"answer":None,"text_answer":None},{"id":12492,"question":{"id":11,"text":"Aboriginal culture tours - WAITOC Member","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12493,"question":{"id":10,"text":"Aboriginal culture tours - Approval given by  AHU representative","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12494,"question":{"id":23,"text":"Aircraft activities - Valid CASA Air Operator's Certificate (AOC) and Certificate of Registration supplied","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12495,"question":{"id":16,"text":"4WD Training - COL assessment to Districts","answer_type":"yes_no"},"answer":None,"text_answer":None},{"id":12496,"question":{"id":21,"text":"Maps of access points and vessel routes in marine parks.","answer_type":"free_text"},"answer":None,"text_answer":None},{"id":12497,"question":{"id":38,"text":"Assessor notes","answer_type":"free_text"},"answer":None,"text_answer":None}]},"referral_assessments":None,"fee_invoice_url":"/cols/payments/invoice-pdf/05575281113","fee_paid":True,"requirements_completed":True}
 
-#    @detail_route(methods=['post'])
-#    @renderer_classes((JSONRenderer,))
-#    def _submit(self, request, *args, **kwargs):
-#        try:
-#            instance = self.get_object()
-#            save_proponent_data(instance,request,self)
-#            missing_fields = missing_required_fields(instance)
-#
-#            if False: #missing_fields:
-#            #if missing_fields:
-#                return Response({'missing_fields': missing_fields})
-#            else:
-#                #raise serializers.ValidationError(repr({'abcde': 123, 'missing_fields':True}))
-#                instance.submit(request,self)
-#                serializer = self.get_serializer(instance)
-#                return Response(serializer.data)
-#        except serializers.ValidationError:
-#            print(traceback.print_exc())
-#            raise
-#        except ValidationError as e:
-#            if hasattr(e,'error_dict'):
-#                raise serializers.ValidationError(repr(e.error_dict))
-#            else:
-#                if hasattr(e,'message'):
-                    #raise serializers.ValidationError(e.message)
-#        except Exception as e:
-#            print(traceback.print_exc())
-#            raise serializers.ValidationError(str(e))
+        return Response(d)
 
 
     @detail_route(methods=['post'])
