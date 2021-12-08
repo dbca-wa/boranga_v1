@@ -1,9 +1,9 @@
-<template id="species_communities_dashboard">
+<template id="proposal_dashboard">
     <div class="row">
         <div class="col-sm-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Species and Communities
+                    <h3 class="panel-title">Applications <small v-if="is_external">View existing applications and lodge new ones</small>
                         <a :href="'#'+pBody" data-toggle="collapse"  data-parent="#userInfo" expanded="true" :aria-controls="pBody">
                             <span class="glyphicon glyphicon-chevron-up pull-right "></span>
                         </a>
@@ -11,7 +11,6 @@
                 </div>
                 <div class="panel-body collapse in" :id="pBody">
                     <div class="row">
-
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="">Group Name</label>
@@ -50,30 +49,34 @@
                             </div>
                         </div>
 
+                        <div v-if="is_external" class="col-md-6">
+                            <router-link  style="margin-top:25px;" class="btn btn-primary pull-right" :to="{ name: 'apply_proposal' }">New Application</router-link>
+                        </div>
                     </div>
-
                     <div class="row">
-                        <div class="col-lg-12" style="margin-top:25px;">
-                            <datatable ref="proposal_datatable" :id="datatable_id" :dtOptions="proposal_options" :dtHeaders="proposal_headers"/>
+                        <div class="col-lg-12">
+                            <datatable v-if="level=='external'" ref="proposal_datatable" :id="datatable_id" :dtOptions="proposal_ex_options" :dtHeaders="proposal_ex_headers"/>
+                            <datatable v-else ref="proposal_datatable" :id="datatable_id" :dtOptions="proposal_options" :dtHeaders="proposal_headers"/>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
     </div>
 </template>
 <script>
+import "babel-polyfill"
 import datatable from '@/utils/vue/datatable.vue'
 import Vue from 'vue'
-
+require("select2/dist/css/select2.min.css");
+require("select2-bootstrap-theme/dist/select2-bootstrap.min.css");
+//require("babel-polyfill"); /* only one of 'import' or 'require' is necessary */
 import {
     api_endpoints,
     helpers
 }from '@/utils/hooks'
 export default {
-    name: 'SpeciesCommunitiesTableDash',
+    name: 'ProposalTableDash',
     props: {
         level:{
             type: String,
@@ -86,10 +89,7 @@ export default {
         url:{
             type: String,
             required: true
-        }
-    },
-    components:{
-        datatable,
+        },
     },
     data() {
         let vm = this;
@@ -98,6 +98,7 @@ export default {
             datatable_id: 'proposal-datatable-'+vm._uid,
             //Profile to check if user has access to process Proposal
             profile: {},
+            is_payment_admin: false,
             // Filters for Proposals
             filterApplicationType: 'All',
             filterProposalStatus: 'All',
@@ -112,13 +113,39 @@ export default {
                 keepInvalid:true,
                 allowInputToggle:true
             },
-            //group_types:['Fauna', 'Flora', 'Communities'],
-            approval_status:[],
-            proposal_submitters: [],
-            proposal_headers:[
-                "Number","Application","Licence Type","Holder","Status","Start Date","Expiry Date","Licence","Action",
+            // application_types:[
+            //     {value:'T Class', name:'T Class'},
+            //     {value:'Filming', name:'Filming'},
+            //     {value:'Event', name:'Event'},
+            // ],
+            external_status:[
+                {value: 'draft', name: 'Draft'},
+                {value: 'with_assessor', name: 'Under Review'},
+                {value: 'approved', name: 'Approved'},
+                {value: 'declined', name: 'Declined'},
+                {value: 'discarded', name: 'Discarded'},
+                {value: 'awaiting_payment', name: 'Awaiting Payment'},
             ],
-            proposal_options:{
+            internal_status:[
+                {value: 'draft', name: 'Draft'},
+                {value: 'with_assessor', name: 'With Assessor'},
+                {value: 'on_hold', name: 'On Hold'},
+                {value: 'with_qa_officer', name: 'With QA Officer'},
+                {value: 'with_referral', name: 'With Referral'},
+                {value: 'with_assessor_requirements', name: 'With Assessor (Requirements)'},
+                {value: 'with_approver', name: 'With Approver'},
+                {value: 'approved', name: 'Approved'},
+                {value: 'declined', name: 'Declined'},
+                {value: 'discarded', name: 'Discarded'},
+                {value: 'awaiting_payment', name: 'Awaiting Payment'},
+            ],
+            proposal_submitters: [],
+            proposal_status: [],
+            proposal_ex_headers:[
+                "Number","Licence Type","Submitter","Applicant","Status","Lodged on","Action"
+            ],
+            proposal_ex_options:{
+                autoWidth: false,
                 language: {
                     processing: "<i class='fa fa-4x fa-spinner fa-spin'></i>"
                 },
@@ -136,8 +163,144 @@ export default {
                     "data": function ( d ) {
                         d.date_from = vm.filterProposalLodgedFrom != '' && vm.filterProposalLodgedFrom != null ? moment(vm.filterProposalLodgedFrom, 'DD/MM/YYYY').format('YYYY-MM-DD'): '';
                         d.date_to = vm.filterProposalLodgedTo != '' && vm.filterProposalLodgedTo != null ? moment(vm.filterProposalLodgedTo, 'DD/MM/YYYY').format('YYYY-MM-DD'): '';
+        		    }
+                },
+                dom: 'lBfrtip',
+                buttons:[
+                'excel', 'csv',],
+                columns: [
+                    {
+                        data: "id",
+                        mRender:function(data,type,full){
+                            return full.lodgement_number;
+                        },
+                        name: "id, lodgement_number",
+                    },
+                    {
+						data: "application_type",
+						name: "application_type__name"
+					},
+                    {
+                        data: "submitter",
+                        mRender:function (data,type,full) {
+                            if (data) {
+                                return `${data.first_name} ${data.last_name}`;
+                            }
+                            return ''
+                        },
+                        name: "submitter__email",
+                    },
+                    {
+                        data: "applicant",
+                        name: "org_applicant__organisation__name, proxy_applicant__email, proxy_applicant__first_name, proxy_applicant__last_name"
+                    },
+                    {
+                        data: "customer_status",
+                        //mRender:function(data,type,full){
+                        //    return vm.level == 'internal' ? full.processing_status: data; //Fix the issue with External dashboard Status dropdown shoing internal statuses.
+                        //},
+                        name: "customer_status",
+                    },
+                    {
+                        data: "lodgement_date",
+                        mRender:function (data,type,full) {
+                            return data != '' && data != null ? moment(data).format(vm.dateFormat): '';
+                        },
+                        searchable: false, // handles by filter_queryset override method - class ProposalFilterBackend
+                    },
+                    {
+                        data: "",
+                        mRender:function (data,type,full) {
+                            let links = '';
+                            if (!vm.is_external){
+                                /*if(vm.check_assessor(full) && full.can_officer_process)*/
+                                if(full.assessor_process){
+                                    links +=  `<a href='/internal/proposal/${full.id}'>Process</a><br/>`;
+                            }
+                                else{
+                                    links +=  `<a href='/internal/proposal/${full.id}'>View</a><br/>`;
+                                }
+                            }
+                            else{
+                                if (full.can_user_edit) {
+                                    links +=  `<a href='/external/proposal/${full.id}'>Continue</a><br/>`;
+                                    links +=  `<a href='#${full.id}' data-discard-proposal='${full.id}'>Discard</a><br/>`;
+                                }
+                                else if (full.can_user_view) {
+                                    links +=  `<a href='/external/proposal/${full.id}'>View</a><br/>`;
+                                }
+                                if (full.customer_status=='Awaiting Payment' && !full.fee_paid) {
+                                    links +=  `<a href='/filming_fee/${full.id}'>Make Payment</a><br/>`;
+                                    links +=  `<a href='/cols/payments/awaiting-payment-pdf/${full.id}' target='_blank'><i style='color:red;' class='fa fa-file-pdf-o'></i>&nbsp Pending Invoice</a><br/>`;
+                                }
+                            }
+                            if (full.fee_invoice_reference && full.proposal_type!='Amendment'){
+                                if (full.application_type=='Filming') {
+                                    links +=  `<a href='/cols/payments/invoice-filmingfee-pdf/${full.fee_invoice_reference}' target='_blank'><i style='color:red;' class='fa fa-file-pdf-o'></i>&nbsp #${full.fee_invoice_reference}</a><br/>`;
+                                } else {
+                                    links +=  `<a href='/cols/payments/invoice-pdf/${full.fee_invoice_reference}' target='_blank'><i style='color:red;' class='fa fa-file-pdf-o'></i>&nbsp #${full.fee_invoice_reference}</a><br/>`;
+                                }
+                            }
+                            return links;
+                        },
+                        name: '',
+                        searchable: false,
+                        orderable: false
                     }
 
+                ],
+                processing: true,
+                /*
+                initComplete: function () {
+                    // Grab submitters from the data in the table
+                    var submittersColumn = vm.$refs.proposal_datatable.vmDataTable.columns(2);
+                    submittersColumn.data().unique().sort().each( function ( d, j ) {
+                        var submitters = [];
+                        $.each(d,(index,s) => {
+                            if (!submitters.find(submitter => submitter.email == s.email) || submitters.length == 0){
+                                submitters.push({
+                                    'email':s.email,
+                                    'search_term': `${s.first_name} ${s.last_name} (${s.email})`
+                                });
+                            }
+                        });
+                        vm.proposal_submitters = submitters;
+                    });
+                    // Grab Status from the data in the table
+                    var statusColumn = vm.$refs.proposal_datatable.vmDataTable.columns(4);
+                    statusColumn.data().unique().sort().each( function ( d, j ) {
+                        let statusTitles = [];
+                        $.each(d,(index,a) => {
+                            a != null && statusTitles.indexOf(a) < 0 ? statusTitles.push(a): '';
+                        })
+                        vm.proposal_status = statusTitles;
+                    });
+                }
+                */
+            },
+            proposal_headers:[
+                "Number","Licence Type","Submitter","Applicant","Status","Lodged on","Assigned Officer","Action",
+            ],
+            proposal_options:{
+                autoWidth: false,
+                language: {
+                    processing: "<i class='fa fa-4x fa-spinner fa-spin'></i>"
+                },
+                responsive: true,
+                serverSide: true,
+                order: [
+                    [0, 'desc']
+                ],
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+                ajax: {
+                    "url": vm.url,
+                    "dataSrc": 'data',
+
+                    // adding extra GET params for Custom filtering
+                    "data": function ( d ) {
+                        d.date_from = vm.filterProposalLodgedFrom != '' && vm.filterProposalLodgedFrom != null ? moment(vm.filterProposalLodgedFrom, 'DD/MM/YYYY').format('YYYY-MM-DD'): '';
+                        d.date_to = vm.filterProposalLodgedTo != '' && vm.filterProposalLodgedTo != null ? moment(vm.filterProposalLodgedTo, 'DD/MM/YYYY').format('YYYY-MM-DD'): '';
+        		    }
                 },
                 dom: 'lBfrtip',
                 buttons:[
@@ -145,248 +308,116 @@ export default {
                 columns: [
                     {
                         data: "id",
-                        'render':function(data,type,full){
-                        if(!vm.is_external){
-                            var result = '';
-                            var popTemplate = '';
-                            var message = '';
-                            let tick = '';
-                            tick = "<i class='fa fa-exclamation-triangle' style='color:red'></i>"
-                            result = '<span>' + full.lodgement_number + '</span>';
-                            if(full.can_reissue){
-                                if(!full.can_action){
-                                    if(full.set_to_cancel){
-                                        message = 'This Licence is marked for cancellation to future date';
-                                    }
-                                    if(full.set_to_suspend){
-                                        message = 'This Licence is marked for suspension to future date';
-                                    }
-                                    if(full.set_to_surrender){
-                                        message = 'This Licence is marked for surrendering to future date';
-                                    }
-                                    popTemplate = _.template('<a href="#" ' +
-                                            'role="button" ' +
-                                            'data-toggle="popover" ' +
-                                            'data-trigger="hover" ' +
-                                            'data-placement="top auto"' +
-                                            'data-html="true" ' +
-                                            'data-content="<%= text %>" ' +
-                                            '><%= tick %></a>');
-                                    result += popTemplate({
-                                        text: message,
-                                        tick: tick
-                                    });
-
-                                }
-                            }
-                            return result;
-                        }
-                        else { return full.lodgement_number }
+                        mRender:function(data,type,full){
+                            return full.lodgement_number;
                         },
-                        'createdCell': helpers.dtPopoverCellFn,
-                        //name: "id, lodgement_number",
-                        name: "lodgement_number",
+                        data: "id, lodgement_number"
                     },
                     {
-                        data: "linked_applications",
+						data: "application_type",
+						name: "application_type__name"
+					},
+                    {
+                        data: "submitter",
                         mRender:function (data,type,full) {
-                            let applications = '';
-                            _.forEach(data, function (item) {
-                                applications += item + '<br>';
-                            });
-                            return applications;
+                            if (data) {
+                                return `${data.first_name} ${data.last_name}`;
+                            }
+                            return ''
                         },
-                        name: "current_proposal__lodgement_number"
-
-                    },
-
-
-                    {
-                        data: "application_type",
-                        name: "current_proposal__application_type__name"
+                        name: "submitter__email",
                     },
                     {
                         data: "applicant",
                         name: "org_applicant__organisation__name, proxy_applicant__email, proxy_applicant__first_name, proxy_applicant__last_name"
                     },
-                    {data: "status"},
                     {
-                        data: "start_date",
+                        data: "processing_status",
+                        //mRender:function(data,type,full){
+                        //    return vm.level == 'external' ? full.customer_status: data;
+                        //},
+                        name: "processing_status",
+                    },
+                    {
+                        data: "lodgement_date",
                         mRender:function (data,type,full) {
                             return data != '' && data != null ? moment(data).format(vm.dateFormat): '';
                         },
-                        searchable: false
+                        searchable: false, // handles by filter_queryset override method - class ProposalFilterBackend
                     },
                     {
-                        data: "expiry_date",
-                        mRender:function (data,type,full) {
-                            return data != '' && data != null ? moment(data).format(vm.dateFormat): '';
-                        },
-                        searchable: false
-                    },
-                    {
-                        data: "licence_document",
-                        mRender:function(data,type,full){
-                            var result = '';
-                            var popTemplate = '';
-                            if(!full.migrated){
-                            // return `<a href="${data}" target="_blank"><i style="color:red" class="fa fa-file-pdf-o"></i></a>`;
-                            result= `<a href="${data}" target="_blank"><i style="color:red" class="fa fa-file-pdf-o"></i></a>`;
-                            }
-                            else if(full.migrated){
-                               var icon = "<i class='fa fa-file-pdf-o' style='color:red'></i>"
-                               var message= 'This is a migrated licence';
-                               popTemplate = _.template('<a href="#" ' +
-                                            'role="button" ' +
-                                            'data-toggle="popover" ' +
-                                            'data-trigger="hover" ' +
-                                            'data-placement="top auto"' +
-                                            'data-html="true" ' +
-                                            'data-content="<%= text %>" ' +
-                                            '><%= tick %></a>');
-                                    result += popTemplate({
-                                        text: message,
-                                        tick: icon
-                                    });
-                            }
-                            if(full.requirement_docs){
-                                _.forEach(full.requirement_docs, function (item) {
-                                    result += `<br><a href="${item[1]}" target="_blank">${item[0]}</a>`;
-                                });
-                            }
-                            return result;
-                        },
-                        'createdCell': helpers.dtPopoverCellFn,
-                        name: 'licence_document__name'
+                        data: "assigned_officer",
+                        name: "assigned_officer__first_name, assigned_officer__last_name",
                     },
                     {
                         data: '',
                         mRender:function (data,type,full) {
                             let links = '';
                             if (!vm.is_external){
-                                //if(vm.check_assessor(full)){
-                                if(full.is_approver){
-                                    if(!full.is_lawful_authority)
-                                    {
-                                        if(full.can_reissue){
-                                            links +=  `<a href='#${full.id}' data-reissue-approval='${full.current_proposal}'>Reissue</a><br/>`;
-                                        }
-                                    }
-                                }
-                                if(full.is_assessor){
-                                    // if(full.can_reissue){
-                                    //     links +=  `<a href='#${full.id}' data-reissue-approval='${full.current_proposal}'>Reissue</a><br/>`;
-                                    // }
-                                    if(full.is_lawful_authority)
-                                    {
-                                        if(full.can_reissue_lawful_authority){
-                                            links +=  `<a href='#${full.id}' data-reissue-approval='${full.current_proposal}'>Reissue</a><br/>`;
-                                        }
-                                    }
-                                    if(full.application_type=='E Class' && (full.status=='Current' || full.status=='Suspended')){
-                                        if(full.can_extend){
-                                            links +=  `<a href='#${full.id}' data-extend-approval='${full.id}'>Extend</a><br/>`;
-                                        } else {
-                                            links +=  `<a class='disabled' title='Licence has already been extended' style="color: grey;text-decoration: none;">Extend</a><br/>`;
-                                        }
-                                    }
-                                    if(full.can_reissue && full.can_action){
-                                        if(full.is_lawful_authority)
-                                        {
-                                            if(full.can_reissue_lawful_authority){
-                                                links +=  `<a href='#${full.id}' data-cancel-approval='${full.id}'>Cancel</a><br/>`;
-                                                links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-                                            }
-                                        }
-                                        else{
-                                            links +=  `<a href='#${full.id}' data-cancel-approval='${full.id}'>Cancel</a><br/>`;
-                                            links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-                                        }
-                                        // links +=  `<a href='#${full.id}' data-cancel-approval='${full.id}'>Cancel</a><br/>`;
-                                        // links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-                                    }
-                                    if(full.status == 'Current' && full.can_action){
-                                        if(full.is_lawful_authority)
-                                        {
-                                            if(full.is_lawful_authority_finalised){
-                                                links +=  `<a href='#${full.id}' data-suspend-approval='${full.id}'>Suspend</a><br/>`;
-                                            }
-                                        }
-                                        else{
-                                            links +=  `<a href='#${full.id}' data-suspend-approval='${full.id}'>Suspend</a><br/>`;
-                                        }
-
-                                        // links +=  `<a href='#${full.id}' data-suspend-approval='${full.id}'>Suspend</a><br/>`;
-                                    }
-                                    if(full.can_reinstate)
-                                    {
-                                        links +=  `<a href='#${full.id}' data-reinstate-approval='${full.id}'>Reinstate</a><br/>`;
-                                    }
-                                    links +=  `<a href='/internal/approval/${full.id}'>View</a><br/>`;
+                                /*if(vm.check_assessor(full) && full.can_officer_process)*/
+                                if(full.assessor_process){   
+                                        links +=  `<a href='/internal/species_communities/${full.id}'>Process</a><br/>`;    
                                 }
                                 else{
-                                    links +=  `<a href='/internal/approval/${full.id}'>View</a><br/>`;
-                                }
-                                if(full.renewal_document && full.renewal_sent){
-                                  links +=  `<a href='${full.renewal_document}' target='_blank'>Renewal Notice</a><br/>`;  
-
+                                    links +=  `<a href='/internal/species_communities/${full.id}'>View</a><br/>`;
                                 }
                             }
-                            else{//External Dashboard actions.
-                                if (full.can_reissue) {
-                                    links +=  `<a href='/external/approval/${full.id}'>View</a><br/>`;
-                                    if(full.can_action){
-                                        if(full.is_lawful_authority)
-                                        {
-                                            if(full.can_reissue_lawful_authority){
-                                                links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-                                            }
-                                        }
-                                        else{
-                                            links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-                                        }
-                                        // links +=  `<a href='#${full.id}' data-surrender-approval='${full.id}'>Surrender</a><br/>`;
-
-                                        if(full.can_amend){
-                                           links +=  `<a href='#${full.id}' data-amend-approval='${full.current_proposal}'>Amend</a><br/>`; 
-                                       }                                        
-                                    }
-                                    if(full.renewal_document && full.renewal_sent && full.can_renew) {
-                                    links +=  `<a href='#${full.id}' data-renew-approval='${full.current_proposal}'>Renew</a><br/>`;
-                                    }                                    
+                            else{
+                                if (full.can_user_edit) {
+                                    links +=  `<a href='/external/species_communities/${full.id}'>Continue</a><br/>`;
+                                    links +=  `<a href='#${full.id}' data-discard-proposal='${full.id}'>Discard</a><br/>`;
                                 }
-                                else {
-                                    links +=  `<a href='/external/approval/${full.id}'>View</a><br/>`;
-
+                                else if (full.can_user_view) {
+                                    links +=  `<a href='/external/species_communities/${full.id}'>View</a><br/>`;
                                 }
                             }
+
+                            links +=  `<a href='/internal/species_communities/${full.id}'>Edit</a><br/>`; // Dummy addition for Boranag demo
+
                             return links;
                         },
+                        name: '',
                         searchable: false,
-                        orderable: false,
-                        name: ''
-                    },
-                    {data: "migrated", visible: false},
-                    
+                        orderable: false
+                    }
+
                 ],
                 processing: true,
                 /*
                 initComplete: function () {
+                    // Grab submitters from the data in the table
+                    var submittersColumn = vm.$refs.proposal_datatable.vmDataTable.columns(2);
+                    submittersColumn.data().unique().sort().each( function ( d, j ) {
+                        var submitters = [];
+                        $.each(d,(index,s) => {
+                            if (!submitters.find(submitter => submitter.email == s.email) || submitters.length == 0){
+                                submitters.push({
+                                    'email':s.email,
+                                    'search_term': `${s.first_name} ${s.last_name} (${s.email})`
+                                });
+                            }
+                        });
+                        vm.proposal_submitters = submitters;
+                    });
                     // Grab Status from the data in the table
-                    var statusColumn = vm.$refs.proposal_datatable.vmDataTable.columns(5);
+                    var statusColumn = vm.$refs.proposal_datatable.vmDataTable.columns(4);
                     statusColumn.data().unique().sort().each( function ( d, j ) {
                         let statusTitles = [];
                         $.each(d,(index,a) => {
                             a != null && statusTitles.indexOf(a) < 0 ? statusTitles.push(a): '';
                         })
-                        vm.approval_status = statusTitles;
+                        vm.proposal_status = statusTitles;
                     });
+
                     // Fix the table rendering columns
                     vm.$refs.proposal_datatable.vmDataTable.columns.adjust().responsive.recalc();
                 }
                 */
             }
         }
+    },
+    components:{
+        datatable
     },
     watch:{
         filterProposalSubmitter: function(){
@@ -397,7 +428,6 @@ export default {
             } else {
                 vm.$refs.proposal_datatable.vmDataTable.columns(2).search('').draw();
             }
-
         },
         filterProposalStatus: function() {
             let vm = this;
@@ -407,58 +437,90 @@ export default {
                 vm.$refs.proposal_datatable.vmDataTable.columns(4).search('').draw();
             }
         },
+        filterApplicationType: function() {
+            let vm = this;
+            if (vm.filterApplicationType!= 'All') {
+                vm.$refs.proposal_datatable.vmDataTable.columns(1).search(vm.filterApplicationType).draw();
+            } else {
+                vm.$refs.proposal_datatable.vmDataTable.columns(1).search('').draw();
+            }
+        },
         filterProposalLodgedFrom: function(){
             this.$refs.proposal_datatable.vmDataTable.draw();
         },
         filterProposalLodgedTo: function(){
             this.$refs.proposal_datatable.vmDataTable.draw();
-        },
-        filterApplicationType: function() {
-            let vm = this;
-            if (vm.filterApplicationType!= 'All') {
-                vm.$refs.proposal_datatable.vmDataTable.columns(2).search(vm.filterApplicationType).draw();
-            } else {
-                vm.$refs.proposal_datatable.vmDataTable.columns(2).search('').draw();
-            }
-        },
+        }
     },
     computed: {
-        group_types: function(){
-            return api_endpoints.group_types
-        },
-        status: function(){
-            //return this.is_external ? this.external_status : this.internal_status;
-            return [];
-        },
         is_external: function(){
             return this.level == 'external';
         },
-        is_internal: function(){
-            return this.level == 'internal';
-        },
         is_referral: function(){
             return this.level == 'referral';
-        }
+        },
+        
     },
     methods:{
-        createEClassLicence: function(){
-            //this.save_wo();
-            this.$refs.eclass_licence.isModalOpen = true;
+        make_payment: function(fee_invoice_reference){
+        //make_payment2: function(){
+            vm.$http.post('/existing_invoice_payment/' + fee_invoice_reference).then((response) => {
+                vm.res = response.body;
+            },(error) => {
+                console.log(error);
+            })
+
         },
+        make_payment2: function (fee_invoice_reference) {
+            let vm = this;
+            var form = document.forms.new_payment;
+            if (vm.payment_method == 'existing_invoice') {
+                form.action = '/existing_invoice_payment/' + fee_invoice_reference  + '/?method=' + vm.payment_method;
+                form.submit();
+            }
+        },
+
 
         fetchFilterLists: function(){
             let vm = this;
 
-            vm.$http.get(api_endpoints.filter_list_approvals).then((response) => {
+            //vm.$http.get('/api/list_proposal/filter_list/').then((response) => {
+            vm.$http.get(api_endpoints.filter_list).then((response) => {
                 vm.proposal_submitters = response.body.submitters;
-                vm.approval_status = response.body.approval_status_choices;
                 vm.application_types= response.body.application_types;
+                //vm.proposal_status = vm.level == 'internal' ? response.body.processing_status_choices: response.body.customer_status_choices;
+                vm.proposal_status = vm.level == 'internal' ? vm.internal_status: vm.external_status;
             },(error) => {
                 console.log(error);
             })
             //console.log(vm.regions);
         },
 
+        discardProposal:function (proposal_id) {
+            let vm = this;
+            swal({
+                title: "Discard Application",
+                text: "Are you sure you want to discard this proposal?",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonText: 'Discard Application',
+                confirmButtonColor:'#d9534f'
+            }).then(() => {
+                vm.$http.delete(api_endpoints.discard_proposal(proposal_id))
+                .then((response) => {
+                    swal(
+                        'Discarded',
+                        'Your proposal has been discarded',
+                        'success'
+                    )
+                    vm.$refs.proposal_datatable.vmDataTable.ajax.reload();
+                }, (error) => {
+                    console.log(error);
+                });
+            },(error) => {
+
+            });
+        },
         addEventListeners: function(){
             let vm = this;
             // Initialise Proposal Date Filters
@@ -475,73 +537,22 @@ export default {
             $(vm.$refs.proposalDateFromPicker).on('dp.change',function (e) {
                 if ($(vm.$refs.proposalDateFromPicker).data('DateTimePicker').date()) {
                     vm.filterProposalLodgedFrom = e.date.format('DD/MM/YYYY');
-                    //$(vm.$refs.proposalDateToPicker).data("DateTimePicker").minDate(e.date);
+                    $(vm.$refs.proposalDateToPicker).data("DateTimePicker").minDate(e.date);
                 }
                 else if ($(vm.$refs.proposalDateFromPicker).data('date') === "") {
                     vm.filterProposalLodgedFrom = "";
                 }
             });
-
             // End Proposal Date Filters
-            // Internal Reissue listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-reissue-approval]', function(e) {
+            // External Discard listener
+            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-discard-proposal]', function(e) {
                 e.preventDefault();
-                var id = $(this).attr('data-reissue-approval');
-                vm.reissueApproval(id);
+                var id = $(this).attr('data-discard-proposal');
+                vm.discardProposal(id);
             });
-
-            // Internal Extend listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-extend-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-extend-approval');
-                vm.extendApproval(id);
-            });
-
-
-            //Internal Cancel listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-cancel-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-cancel-approval');
-                vm.cancelApproval(id);
-            });
-
-            //Internal Suspend listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-suspend-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-suspend-approval');
-                vm.suspendApproval(id);
-            });
-
-            // Internal Reinstate listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-reinstate-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-reinstate-approval');
-                vm.reinstateApproval(id);
-            });
-
-            //Internal/ External Surrender listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-surrender-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-surrender-approval');
-                vm.surrenderApproval(id);
-            });
-
-            // External renewal listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-renew-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-renew-approval');
-                vm.renewApproval(id);
-            });
-
-            // External amend listener
-            vm.$refs.proposal_datatable.vmDataTable.on('click', 'a[data-amend-approval]', function(e) {
-                e.preventDefault();
-                var id = $(this).attr('data-amend-approval');
-                vm.amendApproval(id);
-            });
-
         },
         initialiseSearch:function(){
+            this.submitterSearch();
             this.dateSearch();
         },
         submitterSearch:function(){
@@ -560,7 +571,7 @@ export default {
                 function(settings,data,dataIndex,original){
                     let from = vm.filterProposalLodgedFrom;
                     let to = vm.filterProposalLodgedTo;
-                    let val = original.expiry_date;
+                    let val = original.lodgement_date;
 
                     if ( from == '' && to == ''){
                         return true;
@@ -591,251 +602,47 @@ export default {
             );
         },
 
+
         fetchProfile: function(){
             let vm = this;
             Vue.http.get(api_endpoints.profile).then((response) => {
-                vm.profile = response.body
+                vm.profile = response.body;
+                vm.is_payment_admin=response.body.is_payment_admin;
+                              
             },(error) => {
                 console.log(error);
+                
             })
         },
 
         check_assessor: function(proposal){
             let vm = this;
-
-            var assessor = proposal.allowed_assessors.filter(function(elem){
+            if (proposal.assigned_officer)
+                {
+                    { if(proposal.assigned_officer== vm.profile.full_name)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            else{
+                 var assessor = proposal.allowed_assessors.filter(function(elem){
                     return(elem.id=vm.profile.id)
                 });
-            if (assessor.length > 0)
-                return true;
-            else
-                return false;
-            return false;
-        },
-
-        reissueApproval:function (proposal_id) {
-            let vm = this;
-            let status= 'with_approver'
-            let data = {'status': status}
-            swal({
-                title: "Reissue Licence",
-                text: "Are you sure you want to reissue this licence?",
-                type: "warning",
-                confirmButtonText: 'Reissue licence',
-                //confirmButtonColor:'#d9534f'
-            }).then(() => {
-                vm.$http.post(helpers.add_endpoint_json(api_endpoints.proposals,(proposal_id+'/reissue_approval')),JSON.stringify(data),{
-                emulateJSON:true,
-                })
-                .then((response) => {
-                    vm.$router.push({
-                    name:"internal-proposal",
-                    params:{proposal_id:proposal_id}
-                    });
-                }, (error) => {
-                    console.log(error);
-                    swal({
-                    title: "Reissue Licence",
-                    text: error.body,
-                    type: "error",
-                    })
-                });
-            },(error) => {
-
-            });
-        },
-
-        _extendApproval:function (approval_id) {
-            let vm = this;
-            let status= 'with_approver'
-            let data = {'status': status}
-            swal({
-                title: "Renew Licence",
-                //text: "Are you sure you want to extend this licence?",
-                //type: "warning",
-                text: "<input type='email' class='form-control' name='email' id='email'/>",
-                type: "input",
-                showCancelButton: true,
-                showCancelButton: true,
-                confirmButtonText: 'Extend licence',
-            }).then(() => {
-                vm.$http.post(helpers.add_endpoint_json(api_endpoints.approvals,(approval_id+'/approval_extend')),JSON.stringify(data),{
-                emulateJSON:true,
-                })
-                .then((response) => {
-                    vm.$router.push({
-                    name:"internal-proposal",
-                    params:{approval_id:approval_id}
-                    });
-                }, (error) => {
-                    console.log(error);
-                    swal({
-                    title: "Extend Licence",
-                    text: error.body,
-                    type: "error",
-                    })
-                });
-            },(error) => {
-
-            });
-        },
-
-        extendApproval: function(approval_id){
-            this.$refs.approval_extend.approval_id = approval_id;
-            this.$refs.approval_extend.isModalOpen = true;
-        },
-
-        reinstateApproval:function (approval_id) {
-            let vm = this;
-            let status= 'with_approver'
-            //let data = {'status': status}
-            swal({
-                title: "Reinstate Licence",
-                text: "Are you sure you want to reinstate this licence?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonText: 'Reinstate licence',
-                //confirmButtonColor:'#d9534f'
-            }).then(() => {
-                vm.$http.post(helpers.add_endpoint_json(api_endpoints.approvals,(approval_id+'/approval_reinstate')),{
-                })
-                .then((response) => {
-                    swal(
-                        'Reinstate',
-                        'Your licence has been reinstated',
-                        'success'
-                    )
-                    vm.$refs.proposal_datatable.vmDataTable.ajax.reload();
-                }, (error) => {
-                    console.log(error);
-                    swal({
-                    title: "Reinstate Licence",
-                    text: error.body,
-                    type: "error",
-                    })
-                });
-            },(error) => {
-
-            });
-        },
-
-        renewApproval:function (proposal_id) {
-            let vm = this;
-            let status= 'with_approver'
-            //let data = {'status': status}
-            swal({
-                title: "Renew Licence",
-                text: "Are you sure you want to renew this licence?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonText: 'Renew licence',
-                //confirmButtonColor:'#d9534f'
-            }).then(() => {
-                swal({
-                    title: "Loading...",
-                    //text: "Loading...",
-                    allowOutsideClick: false,
-                    allowEscapeKey:false,
-                    onOpen: () =>{
-                        swal.showLoading()
-                    }
-                })
-                vm.$http.get(helpers.add_endpoint_json(api_endpoints.proposals,(proposal_id+'/renew_approval')),{
                 
-                })
-                .then((response) => {
-                    swal.hideLoading();
-                    swal.close();
-                   let proposal = {}
-                   proposal = response.body
-                   vm.$router.push({
-                    name:"draft_proposal",
-                    params:{proposal_id: proposal.id}
-                   });
-                    
-                }, (error) => {
-                    console.log(error);
-                    swal({
-                    title: "Renew Licence",
-                    text: error.body,
-                    type: "error",                   
-                    })
-                });
-            },(error) => {
-
-            });
+                if (assessor.length > 0)
+                    return true;
+                else
+                    return false;
+              
+            }
+            
         },
-
-        amendApproval:function (proposal_id) {
-            let vm = this;
-            swal({
-                title: "Amend Licence",
-                text: "Are you sure you want to amend this licence?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonText: 'Amend licence',
-                //confirmButtonColor:'#d9534f'
-            }).then(() => {
-                swal({
-                    title: "Loading...",
-                    //text: "Loading...",
-                    allowOutsideClick: false,
-                    allowEscapeKey:false,
-                    onOpen: () =>{
-                        swal.showLoading()
-                    }
-                })
-                vm.$http.get(helpers.add_endpoint_json(api_endpoints.proposals,(proposal_id+'/amend_approval')),{
-                
-                })
-                .then((response) => {
-                    swal.hideLoading();
-                    swal.close();
-                   let proposal = {}
-                   proposal = response.body
-                   vm.$router.push({
-                    name:"draft_proposal",
-                    params:{proposal_id: proposal.id}
-                   });
-                }, (error) => {
-                    console.log(error);
-                    swal({
-                    title: "Amend Licence",
-                    text: error.body,
-                    type: "error",                   
-                    })
-                });
-            },(error) => {
-
-            });
-        },
-
-
-        cancelApproval: function(approval_id){
-            this.$refs.approval_cancellation.approval_id = approval_id;
-            this.$refs.approval_cancellation.isModalOpen = true;
-        },
-
-        suspendApproval: function(approval_id){
-            this.$refs.approval_suspension.approval = {};
-            this.$refs.approval_suspension.approval_id = approval_id;
-            this.$refs.approval_suspension.isModalOpen = true;
-        },
-
-        surrenderApproval: function(approval_id){
-            this.$refs.approval_surrender.approval_id = approval_id;
-            this.$refs.approval_surrender.isModalOpen = true;
-        },
-
-        refreshFromResponse: function(){
-            this.$refs.proposal_datatable.vmDataTable.ajax.reload();
-        },
-
-
     },
-    // Below mounted() method temporarily commented to allow update to above code for Boranga (from COLS) - JM 06-Dec-2021
-    _mounted: function(){
-        this.fetchFilterLists();
+
+
+    mounted: function(){
+        //this.fetchFilterLists();
         this.fetchProfile();
         let vm = this;
         $( 'a[data-toggle="collapse"]' ).on( 'click', function () {
@@ -845,11 +652,14 @@ export default {
             }, 100 );
         });
         this.$nextTick(() => {
-            vm.addEventListeners();
             vm.initialiseSearch();
+            vm.addEventListeners();
         });
     }
 }
 </script>
 <style scoped>
+.dt-buttons{
+    float: right;
+}
 </style>

@@ -1,6 +1,6 @@
 <template>
 <div class="container" id="internalDash">
-    <SpeciesCommunitiesDashTable level="internal" :url="approvals_url"/>
+    <SpeciesCommunitiesDashTable level="internal" :url="species_communities_url"/>
 </div>
 </template>
 <script>
@@ -16,7 +16,7 @@ export default {
         let vm = this;
         return {
             //approvals_url: api_endpoints.approvals_paginated_external,
-            species_communities_url: api_endpoints.species_communities_paginated_external,
+            species_communities_url: api_endpoints.species_communities_paginated_internal,
         }
     
     },

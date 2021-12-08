@@ -19,6 +19,7 @@ import Reports from '@/components/reports/reports.vue'
 import ParkEntryFeesDashboard from '../park_entry_fees_dashboard.vue'
 import DistrictProposal from '../district_proposals/district_proposal.vue'
 import SpeciesCommunitiesDash from '../species_communities/dashboard.vue'
+import SpeciesCommunities from '../species_communities/species_communities.vue'
 export default
 {
     path: '/internal',
@@ -171,6 +172,40 @@ export default
                 },
             ]
         },
+        {
+            path: 'species_communities',
+            component: {
+                render(c)
+                {
+                    return c('router-view')
+                }
+            },
+            children: [
+                {
+                    path: ':proposal_id',
+                    component: {
+                        render(c)
+                        {
+                            return c('router-view')
+                        }
+                    },
+                    children: [
+                        {
+                            path: '/',
+                            component: SpeciesCommunities,
+                            name:"internal-species-communities"
+                        },
+                        {
+                            path: 'referral/:referral_id',
+                            component: Referral,
+                            name:"internal-species-communities-referral"
+                        }
+                    ]
+                },
+            ]
+        },
+
+
         {
             path: 'proposal_compare',
             component: {
